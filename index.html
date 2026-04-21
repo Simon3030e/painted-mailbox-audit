@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painted Mailbox, komplexný audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1A1A2E;
+  --bg-2: #141D38;
+  --bg-3: #0F1426;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --accent: #6C63FF;
+  --accent-vivid: #9490FF;
+  --accent-hover: #5B52EE;
+  --accent-light: #C4C0F0;
+  --accent-glow: rgba(108, 99, 255, 0.15);
+  --border: rgba(196, 192, 240, 0.12);
+  --text: #FFFFFF;
+  --text-2: #C4C0F0;
+  --text-muted: rgba(196, 192, 240, 0.65);
+  --green: #4ADE80;
+  --amber: #FBBF24;
+  --red: #F87171;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-lg: 24px;
+  --t: 0.25s ease;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+.container-narrow { max-width: 840px; margin: 0 auto; padding: 0 32px; }
+
+h1, h2, h3, h4, h5 { font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; color: var(--text); }
+h1 { font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800; }
+h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); }
+h3 { font-size: clamp(1.2rem, 2.2vw, 1.6rem); }
+h4 { font-size: 1.05rem; font-weight: 600; }
+h5 { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-vivid); }
+
+p { color: var(--text-2); margin-bottom: 1rem; line-height: 1.8; }
+p:last-child { margin-bottom: 0; }
+strong { color: var(--text); font-weight: 600; }
+em { color: var(--accent-light); font-style: italic; }
+code { background: var(--bg-card); padding: 2px 8px; border-radius: 4px; font-size: 0.9em; color: var(--accent-vivid); font-family: 'SF Mono', Menlo, monospace; }
+
+a { color: var(--accent-vivid); text-decoration: none; transition: color var(--t); border-bottom: 1px dotted transparent; }
+a:hover { color: var(--accent-light); border-bottom-color: var(--accent-light); }
+
+ul, ol { color: var(--text-2); padding-left: 0; list-style: none; }
+li { margin-bottom: 0.5rem; line-height: 1.75; padding-left: 24px; position: relative; }
+ul > li::before { content: ''; position: absolute; left: 0; top: 0.7em; width: 6px; height: 6px; background: var(--accent); border-radius: 2px; }
+ol { counter-reset: item; }
+ol > li { counter-increment: item; }
+ol > li::before { content: counter(item); position: absolute; left: 0; top: 0; font-weight: 700; color: var(--accent-vivid); font-size: 0.9em; }
+
+.divider { width: 44px; height: 3px; background: var(--accent); border-radius: 99px; margin: 24px 0; }
+
+/* === HERO === */
+.hero {
+  padding: 96px 0 80px;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--accent-glow), transparent 70%), var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 99px;
+  font-size: 0.78rem; font-weight: 500; color: var(--text-2); letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.hero-eyebrow::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+.hero h1 { max-width: 900px; margin-bottom: 24px; }
+.hero h1 .accent { color: var(--accent-vivid); }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 32px; margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border); }
+.hero-meta-item { font-size: 0.85rem; }
+.hero-meta-label { display: block; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.72rem; margin-bottom: 4px; }
+.hero-meta-value { color: var(--text); font-weight: 500; }
+
+/* === SECTIONS === */
+section { padding: 72px 0; position: relative; }
+.section-eyebrow {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 0.78rem; font-weight: 500; color: var(--accent-vivid);
+  text-transform: uppercase; letter-spacing: 0.12em;
+  margin-bottom: 16px;
+}
+.section-eyebrow-num { font-variant-numeric: tabular-nums; opacity: 0.6; }
+.section-heading { margin-bottom: 20px; max-width: 780px; }
+.section-subheading { color: var(--text-2); font-size: 1.1rem; max-width: 720px; margin-bottom: 48px; }
+.section-alt { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+/* === CARDS === */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: background var(--t), border-color var(--t);
+}
+.card:hover { background: var(--bg-card-hover); border-color: rgba(196, 192, 240, 0.2); }
+.card h4 { margin-bottom: 8px; }
+.card p { margin-bottom: 0; }
+.card + .card { margin-top: 16px; }
+
+.grid { display: grid; gap: 20px; margin-top: 32px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 820px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+}
+
+/* === SCORE CARD (Sofia's audit style) === */
+.score-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  transition: border-color var(--t);
+}
+.score-card:hover { border-color: rgba(108, 99, 255, 0.3); }
+.score-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 12px; flex-wrap: wrap; }
+.score-title { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+.score-val {
+  display: inline-flex; align-items: baseline; gap: 2px;
+  font-weight: 700; font-variant-numeric: tabular-nums;
+  padding: 6px 12px; border-radius: 99px; font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.score-val .num { font-size: 1.05rem; }
+.score-val .max { opacity: 0.5; font-size: 0.85rem; }
+.score-low    { background: rgba(248, 113, 113, 0.12); color: var(--red); border: 1px solid rgba(248, 113, 113, 0.25); }
+.score-mid    { background: rgba(251, 191, 36, 0.12); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.25); }
+.score-high   { background: rgba(74, 222, 128, 0.12); color: var(--green); border: 1px solid rgba(74, 222, 128, 0.25); }
+.score-body p { font-size: 0.95rem; margin-bottom: 8px; }
+.score-body p strong { color: var(--accent-vivid); font-weight: 600; }
+
+/* === STAT BLOCK === */
+.stat-block { text-align: left; }
+.stat-number {
+  font-size: clamp(2.5rem, 5vw, 3.4rem);
+  font-weight: 800;
+  color: var(--accent-vivid);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  display: block; margin-top: 12px;
+  font-size: 0.88rem; color: var(--text-2);
+  font-weight: 500;
+}
+.stat-sub { display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.78rem; }
+
+/* === TABLES === */
+.table-wrap { overflow-x: auto; margin: 24px 0; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+th { background: var(--bg-3); color: var(--accent-vivid); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+tbody tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.center, th.center { text-align: center; }
+.pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; }
+.pill-high { background: rgba(248, 113, 113, 0.14); color: var(--red); }
+.pill-med { background: rgba(251, 191, 36, 0.14); color: var(--amber); }
+.pill-low { background: rgba(74, 222, 128, 0.14); color: var(--green); }
+
+/* === TOC === */
+.toc {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin: 48px 0;
+}
+.toc h5 { color: var(--accent-vivid); margin-bottom: 20px; }
+.toc-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 32px; list-style: none; padding: 0; }
+@media (max-width: 720px) { .toc-list { grid-template-columns: 1fr; } }
+.toc-list li { padding-left: 0; }
+.toc-list li::before { display: none; }
+.toc-list a {
+  display: flex; align-items: baseline; gap: 14px;
+  padding: 10px 0; color: var(--text-2); border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+  border-bottom-style: solid;
+}
+.toc-list a:hover { color: var(--accent-vivid); }
+.toc-num { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.85rem; min-width: 32px; }
+
+/* === CALLOUT === */
+.callout {
+  background: var(--bg-card); border-left: 3px solid var(--accent);
+  padding: 20px 24px; border-radius: var(--radius-sm);
+  margin: 24px 0;
+}
+.callout-critical { border-left-color: var(--red); background: rgba(248, 113, 113, 0.05); }
+.callout-good { border-left-color: var(--green); background: rgba(74, 222, 128, 0.05); }
+.callout-title { font-weight: 600; color: var(--text); margin-bottom: 6px; font-size: 0.95rem; }
+.callout p { font-size: 0.95rem; margin-bottom: 0; }
+
+/* === CODEBLOCK === */
+pre {
+  background: var(--bg-3); padding: 20px 24px; border-radius: var(--radius-sm);
+  overflow-x: auto; font-size: 0.85rem; line-height: 1.6;
+  border: 1px solid var(--border); margin: 20px 0;
+}
+pre code { background: none; padding: 0; color: var(--text-2); }
+
+/* === CTA === */
+.cta-box {
+  background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 50%), var(--bg-card);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 56px 48px; margin: 64px 0;
+  text-align: center;
+}
+.cta-box h2 { margin-bottom: 12px; }
+.cta-box p { max-width: 560px; margin: 0 auto 32px; color: var(--text-2); font-size: 1.05rem; }
+.btn {
+  display: inline-block; padding: 14px 32px; background: var(--accent);
+  color: var(--text); font-weight: 600; font-size: 0.95rem;
+  border-radius: 99px; transition: background var(--t), transform var(--t);
+  border: none; cursor: pointer;
+}
+.btn:hover { background: var(--accent-hover); transform: translateY(-2px); color: var(--text); border-bottom-color: transparent; }
+.btn-secondary { background: transparent; border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--bg-card); }
+
+/* === ROADMAP === */
+.roadmap { position: relative; padding-left: 32px; margin: 32px 0; }
+.roadmap::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: var(--border); }
+.roadmap-phase { position: relative; padding-bottom: 32px; }
+.roadmap-phase::before { content: ''; position: absolute; left: -28px; top: 6px; width: 18px; height: 18px; background: var(--bg); border: 3px solid var(--accent); border-radius: 50%; }
+.roadmap-phase h4 { color: var(--accent-vivid); margin-bottom: 12px; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.roadmap-phase ul { color: var(--text-2); }
+
+/* === FOOTER === */
+footer { padding: 64px 0 48px; border-top: 1px solid var(--border); background: var(--bg-2); margin-top: 96px; }
+footer p { color: var(--text-muted); font-size: 0.85rem; }
+footer strong { color: var(--text-2); }
+
+/* === SMALL UTILS === */
+.muted { color: var(--text-muted); font-size: 0.88rem; }
+.mt-0 { margin-top: 0 !important; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-lg { margin-bottom: 48px; }
+
+@media print {
+  body { background: white; color: black; }
+  .hero, section, footer { page-break-inside: avoid; }
+  a { color: black; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">Audit · 21. apríl 2026</div>
+    <h1>Audit predajnej pripravenosti a rastového potenciálu pre <span class="accent">painted-mailbox.com</span></h1>
+    <p style="font-size: 1.15rem; max-width: 720px; color: var(--text-2); line-height: 1.7;">
+      Komplexné hodnotenie existujúceho e-shopu s ručne maľovanými poštovými schránkami, od technického SEO
+      cez branding až po plán rastu v digitálnych kanáloch. Postavené na live crawli webu (1 449 URL),
+      Google Ads keyword dátach pre EN/DE/SK a praktickej skúsenosti s handmade eCommerce.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">Klient</span>
+        <span class="hero-meta-value">painted-mailbox.com</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">Autor auditu</span>
+        <span class="hero-meta-value">Nokto Studio</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">Celkový rating</span>
+        <span class="hero-meta-value">5,5 / 10 · Priestor na dobrý rast</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- TL;DR -->
+<section id="tldr">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">01</span> Executive Summary</div>
+    <h2 class="section-heading">Čo audit ukázal v jednej strane</h2>
+    <p class="section-subheading">
+      Značka má silný produkt a autentický handmade pôvod, ale web nerobí jej hodnote dobrú službu.
+      Najväčšie brzdy nie sú ďaleko od opráv zadarmo, najväčšie príležitosti sedia v DE trhu a v Meta Ads.
+    </p>
+
+    <div class="grid grid-4">
+      <div class="card stat-block">
+        <div class="stat-number">272k</div>
+        <span class="stat-label">DE dopyty / mes</span>
+        <span class="stat-sub">101 seed KWs, testované DataForSEO</span>
+      </div>
+      <div class="card stat-block">
+        <div class="stat-number">5,5<span style="font-size:1.6rem; color: var(--text-muted);">/10</span></div>
+        <span class="stat-label">Predajná pripravenosť</span>
+        <span class="stat-sub">audit Sofie Zvonárovej</span>
+      </div>
+      <div class="card stat-block">
+        <div class="stat-number">902</div>
+        <span class="stat-label">Indexovateľných stránok</span>
+        <span class="stat-sub">z 1 449 crawlnutých</span>
+      </div>
+      <div class="card stat-block">
+        <div class="stat-number">0</div>
+        <span class="stat-label">Publikovaných blog článkov</span>
+        <span class="stat-sub">„No entries found...", endpoint /blog/</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3 style="margin-top: 48px; margin-bottom: 20px;">8 hlavných zistení</h3>
+    <ol style="font-size: 1rem; padding-left: 8px;">
+      <li><strong>Trh je v Nemecku, nie na Slovensku.</strong> DE má 272 370 mesačných dopytov v testovanom seed pásme; SK iba 3 500. Slovenská SEO kampaň sa neoplatí, len držať lokálne pre doma kupujúcich zákazníkov.</li>
+      <li><strong>Názov značky je úzky keyword.</strong> Priame „painted mailbox" hľadá 390 ľudí/mes. Reálne peniaze sú v „housewarming gift" (74 000), „briefkasten" (201 000), „einzugsgeschenk" (9 900), uhloch, z ktorých web aktuálne neťaží.</li>
+      <li><strong>Web má doslova preklep v značke.</strong> Homepage HTML title je „painted maibox, briefkastenkunst, boite aux lettre", chýba „l". SK verzia zase bez diakritiky: „malovane schranky".</li>
+      <li><strong>Drvivá väčšina produktov má generické tituly.</strong> Napríklad <em>„Painted Mailbox - animals 027 - Painted mailbox"</em> alebo meta description <em>„Rybár."</em>. Ide o ~800 produktov, ktoré aktuálne nič na Google nezachytia.</li>
+      <li><strong>AI search = nulová pripravenosť.</strong> Chýba <code>llms.txt</code>, produktové popisy sú 1-slovné, blog je prázdny, schema je minimalistická. Perplexity ani ChatGPT značku necitujú, pretože nemajú čo citovať.</li>
+      <li><strong>Branding je nepremyslený.</strong> Logo je generický script font, typografia na webe (Nunito) neladí s logom, na homepage je mix angličtiny, nemčiny a slovenčiny. Rebrand by mal ísť ruka v ruke s webovým redesignom.</li>
+      <li><strong>Google Ads dáva zmysel len v DE.</strong> EN SERP pre mailboxy ovládajú US big-box značky (CPC 1 až 12 €). DE „briefkasten" CPC je 0,48 až 2,12 €, čo je reálny vstup pre malú dielňu. Primárny trh pre platené vyhľadávanie je Nemecko.</li>
+      <li><strong>Meta Ads a Email sú najsilnejšie páky rastu.</strong> Vizuálny handmade produkt, 2 000 FB sledovateľov, 1 000 predaných kusov = vhodná DNA pre Meta a email marketing. Tieto dva kanály zvyknú mať pri podobných handmade eshopoch najlepší pomer výsledku a nákladov.</li>
+    </ol>
+
+    <div class="callout callout-critical" style="margin-top: 40px;">
+      <div class="callout-title">Najväčšie riziko: kapacita autorky</div>
+      <p>Handmade produkcia má stropy. Pred akýmkoľvek traffic rampom treba zistiť, koľko schránok reálne zvládne dielňa mesačne pri 0 % a 30 % rezerve. Bez toho čísla Meta Ads a Google Ads iba zväčšia frustráciu zo „sold out" stavu.</p>
+    </div>
+
+    <!-- TOC -->
+    <div class="toc">
+      <h5>Obsah dokumentu</h5>
+      <ul class="toc-list">
+        <li><a href="#technika-seo"><span class="toc-num">02</span> Technika a SEO (základ)</a></li>
+        <li><a href="#ux-cro"><span class="toc-num">03</span> UX a CRO</a></li>
+        <li><a href="#produkt-checkout"><span class="toc-num">04</span> Produkt, katalóg, checkout</a></li>
+        <li><a href="#dovera-obsah"><span class="toc-num">05</span> Dôvera, obsah, meranie</a></li>
+        <li><a href="#branding"><span class="toc-num">06</span> Vizuál a branding</a></li>
+        <li><a href="#crawl"><span class="toc-num">07</span> Technické dáta z crawlu</a></li>
+        <li><a href="#keywords"><span class="toc-num">08</span> Keyword research &amp; potenciál</a></li>
+        <li><a href="#google-ads"><span class="toc-num">09</span> Google Ads, audit a plán</a></li>
+        <li><a href="#meta-ads"><span class="toc-num">10</span> Meta Ads, audit a plán</a></li>
+        <li><a href="#seo-backlog"><span class="toc-num">11</span> SEO priority backlog</a></li>
+        <li><a href="#ai-search"><span class="toc-num">12</span> AI Search readiness</a></li>
+        <li><a href="#email"><span class="toc-num">13</span> Email marketing</a></li>
+        <li><a href="#roadmap"><span class="toc-num">14</span> 90-dňový roadmap</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- === SOFIA 1, TECHNIKA a SEO === -->
+<section id="technika-seo" class="section-alt">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">02</span> Prvá vrstva auditu</div>
+    <h2 class="section-heading">Technika a SEO</h2>
+    <p class="section-subheading">
+      Audit je robený na živej verzii webu, prechádzali sme homepage, kategóriu, produktové stránky, košík,
+      checkout, robots.txt, sitemap, response headers a renderovaný DOM. PageSpeed Insights API v čase
+      auditu vracalo 429 quota exceeded, preto sa výkon opiera o live timings, hlavičky a browser render.
+    </p>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">HTTPS a bezpečnosť</div><div class="score-val score-mid"><span class="num">7</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> HTTP korektne presmerúva na HTTPS, gzip kompresia zapnutá, X-Frame-Options a X-Content-Type-Options prítomné.</p>
+        <p><strong>Prečo:</strong> technický základ funguje.</p>
+        <p><strong>Odporúčanie:</strong> doplniť <code>Strict-Transport-Security</code>, <code>Content-Security-Policy</code>, <code>Referrer-Policy</code> a <code>Permissions-Policy</code>.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Indexácia a crawl</div><div class="score-val score-high"><span class="num">8</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> robots.txt blokuje filtre, search, cart a checkout; sitemap.xml vedie na sitemap index a hlavná sitemap obsahuje 299 URL s hreflang pre en/de/sk.</p>
+        <p><strong>Prečo:</strong> Google dostáva čistú mapu webu.</p>
+        <p><strong>Odporúčanie:</strong> pravidelne kontrolovať, či sa v indexe nedržia staré alebo generické URL.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Rýchlosť a hosting</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> homepage TTFB ≈ 0,61 s, produkt ≈ 0,42 s, celkovo okolo 1,0 s. HTML homepage ≈ 284 KB, produkt ≈ 132 KB. Na webe beží viacero externých skriptov (GTM, GA, Facebook, Shoptet doplnky).</p>
+        <p><strong>Prečo:</strong> nie je to havária, ale homepage je ťažká a mobil bude citlivejší.</p>
+        <p><strong>Odporúčanie:</strong> zredukovať DOM a doplnky, odložiť nepotrebný JS a zoštíhliť homepage.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Homepage title a SERP snippet</div><div class="score-val score-low"><span class="num">2</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> homepage title je <em>„painted maibox, briefkastenkunst, boite aux lettre"</em>, preklep, slabá formulácia a nulová jasná hodnota pre klik z Google.</p>
+        <p><strong>Prečo:</strong> znižuje CTR aj dôveru v značku už na úrovni SERP.</p>
+        <p><strong>Odporúčanie:</strong> prepísať title a meta description na jasný, korektný a kľúčovým slovám zodpovedajúci text.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Canonical a hreflang</div><div class="score-val score-high"><span class="num">8</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> homepage aj produkty majú canonical aj hreflang pre EN/DE/SK.</p>
+        <p><strong>Prečo:</strong> silný základ pre viacjazyčné SEO.</p>
+        <p><strong>Odporúčanie:</strong> zachovať technické nastavenie, ale zlepšiť obsahovú kvalitu prekladov.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">URL štruktúra</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> časť URL je dobrá (<code>/rybar/</code>, <code>/types-of-mailboxes/</code>), ale iná je generická (<code>/painted-mailbox/</code> pre konkrétny produkt).</p>
+        <p><strong>Prečo:</strong> zhoršuje relevanciu v SERPe aj orientáciu používateľa.</p>
+        <p><strong>Odporúčanie:</strong> používať opisné slugy podľa motívu/typu, nie generické názvy.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Štruktúrované dáta</div><div class="score-val score-mid"><span class="num">6</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> prítomné WebSite/SearchAction, BreadcrumbList a produktové Offer mikrodáta. Chýba silnejšia review/rating vrstva a obsah je často príliš chudobný.</p>
+        <p><strong>Prečo:</strong> rich-results potenciál je len čiastočný.</p>
+        <p><strong>Odporúčanie:</strong> doplniť konzistentné Product dáta, recenzie a bohatšie PDP informácie.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === SOFIA 2, UX a CRO === -->
+<section id="ux-cro">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">03</span> Druhá vrstva auditu</div>
+    <h2 class="section-heading">UX a CRO</h2>
+    <p class="section-subheading">
+      Ako sa používateľ pohybuje webom, čo vidí prvé a kde sa ho značka presviedča, aby kúpil.
+    </p>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Above the fold na homepage</div><div class="score-val score-low"><span class="num">4</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> návštevník najprv vidí cookie bar, horný info pás, login/jazyky, veľké menu a až potom trust bloky a produkty.</p>
+        <p><strong>Prečo:</strong> nový návštevník sa orientuje pomaly a slabo chápe, prečo má kúpiť práve tu.</p>
+        <p><strong>Odporúčanie:</strong> postaviť jasný hero blok s 1 hlavnou vetou, 1 CTA a 2, 3 dôvodmi dôvery.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Navigácia a architektúra</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> kategórií je veľa, opakujú sa v hlavičke aj bokoch a pôsobia skôr ako databáza než kurátorovaný nákupný vstup.</p>
+        <p><strong>Prečo:</strong> vysoká kognitívna záťaž znižuje preklik do správnej sekcie.</p>
+        <p><strong>Odporúčanie:</strong> zoskupiť kategórie do menšieho počtu vstupov typu <em>Shop by theme, Shop by type, Custom orders</em>.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Jazyková konzistentnosť</div><div class="score-val score-low"><span class="num">2</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> EN verzia mieša angličtinu so slovenčinou a nemčinou: <em>Garantie, Slovenská pošta, Prevodom vopred, Dobierkou, Informácie pre vás</em>. EN General terms je obsahovo po slovensky.</p>
+        <p><strong>Prečo:</strong> veľká brzda dôvery aj konverzie pri zahraničnom publiku.</p>
+        <p><strong>Odporúčanie:</strong> kompletne preložiť EN/DE vrátane právnych stránok, checkout názvov a trust blokov.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Prístupnosť</div><div class="score-val score-mid"><span class="num">6</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> plusom je skip link a alt texty na mnohých obrázkoch, mínusom cookie banner bez rovnocennej voľby odmietnutia a textovo prehustené rozhranie.</p>
+        <p><strong>Prečo:</strong> zhoršuje použiteľnosť aj súlad s EU očakávaniami.</p>
+        <p><strong>Odporúčanie:</strong> pridať Reject na prvú vrstvu a prečistiť headingy a duplicity.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Hodnotová ponuka</div><div class="score-val score-mid"><span class="num">6</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> web komunikuje silné handmade benefity: maľba na želanie, od roku 2016, foto na schválenie, 14-dňová garancia, odolné farby.</p>
+        <p><strong>Prečo:</strong> dobrý základ na vyššiu maržu.</p>
+        <p><strong>Odporúčanie:</strong> vytiahnuť tieto argumenty vyššie a previazať ich s CTA.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Sociálny dôkaz</div><div class="score-val score-low"><span class="num">3</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> produktové stránky ukazujú „Not rated", diskusie sú prázdne a tvrdenie „Almost 1000 products" nie je podopreté recenziami.</p>
+        <p><strong>Prečo:</strong> pri prémiovom handmade produkte chýba kritický dôkaz dôvery.</p>
+        <p><strong>Odporúčanie:</strong> zaviesť recenzie s fotkami, citácie zákazníkov a mediálne logá priamo na homepage a PDP.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Dizajn a hierarchia</div><div class="score-val score-mid"><span class="num">6</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> vizuál je autentický a fotky sú pekné, ale základný Shoptet template pôsobí genericky a CTA nemá prémiovú váhu.</p>
+        <p><strong>Prečo:</strong> značka je hodnotnejšia než jej súčasná prezentácia.</p>
+        <p><strong>Odporúčanie:</strong> posilniť typografiu, spacing, CTA kontrast a oddeliť prémiové ručné produkty od „katalógového" dojmu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === SOFIA 3, PRODUKT, KATALOG, CHECKOUT === -->
+<section id="produkt-checkout" class="section-alt">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">04</span> Tretia vrstva auditu</div>
+    <h2 class="section-heading">Produkt, katalóg, checkout</h2>
+    <p class="section-subheading">
+      Cesta od objavenia produktu po zaplatenú objednávku. Tu sa platí za každú zbytočnú frikciu.
+    </p>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Produktové fotografie</div><div class="score-val score-high"><span class="num">8</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> sample produkt Rybár má viacero detailných fotiek, galériu aj zoom.</p>
+        <p><strong>Prečo:</strong> pri vizuálnom handmade produkte je to veľké plus.</p>
+        <p><strong>Odporúčanie:</strong> doplniť lifestyle fotky pri dome, detail povrchu a 1 foto mierky/rozmeru.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Produktové popisy</div><div class="score-val score-low"><span class="num">3</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> Rybár má <em>„No product's description available"</em>; iný sample produkt má v popise len materiál a rozmery.</p>
+        <p><strong>Prečo:</strong> používateľ nevidí príbeh, vhodnosť produktu, proces personalizácie ani dôvody ceny.</p>
+        <p><strong>Odporúčanie:</strong> zaviesť jednotnú PDP šablónu s benefitmi, materiálom, rozmermi, personalizáciou, termínom a FAQ.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Cena a transparentnosť</div><div class="score-val score-mid"><span class="num">6</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> cena je viditeľná, renderovaný DOM k 21. aprílu 2026 pri Rybár potvrdil cenu a termín „In 2 weeks".</p>
+        <p><strong>Prečo:</strong> základná orientácia funguje.</p>
+        <p><strong>Odporúčanie:</strong> ukazovať aj orientačné doručenie a vysvetlenie príplatkov priamo pri cene.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Katalóg a listingy</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> kategórie majú filter ceny/stocku a sortovanie, ale názvy sú nekonzistentné, miešajú jazyky a v listingu sa objavujú aj interné číselné kódy typu <em>397, 396</em>.</p>
+        <p><strong>Prečo:</strong> listing pôsobí technicky a menej dôveryhodne.</p>
+        <p><strong>Odporúčanie:</strong> vyčistiť naming, skryť interné kódy a zjednotiť názvoslovie.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Košík a flow</div><div class="score-val score-high"><span class="num">7</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> checkout je trojkrokový, guest checkout dostupný.</p>
+        <p><strong>Prečo:</strong> solidný základ.</p>
+        <p><strong>Odporúčanie:</strong> zachovať flow, ale prečistiť mikrotexty a reassurance prvky.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Platba a doprava</div><div class="score-val score-high"><span class="num">7</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> Packeta Home, Packeta Z-Box, Slovenská pošta, kreditka cez Shoptet Pay, prevod a dobierka. Krajiny sú široko pokryté.</p>
+        <p><strong>Prečo:</strong> ponuka je prakticky dobrá.</p>
+        <p><strong>Odporúčanie:</strong> ukázať kompatibilné kombinácie a ETA zrozumiteľnejšie už po výbere dopravy.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Checkout friction</div><div class="score-val score-low"><span class="num">4</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> v kroku platby sa zobrazujú texty <em>„It's not possible to set this combination of billing and shipping"</em>, pôsobí to ako chyba. Opakuje sa telefón a rušivé partner-provider texty.</p>
+        <p><strong>Prečo:</strong> zvyšuje to neistotu tesne pred dokončením nákupu.</p>
+        <p><strong>Odporúčanie:</strong> predvoliť najpravdepodobnejšiu kombináciu, skryť nekompatibilné metódy a posilniť reassurance.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-good" style="margin-top: 32px;">
+      <div class="callout-title">Pozn. k checkoutu</div>
+      <p>Niektoré informácie o checkoute berieme s rezervou, konkrétne chybové kombinácie pri doprave môžu byť šumom v testovacom toku. Finálnu verifikáciu spraví 15-min session recording po prvej úprave.</p>
+    </div>
+  </div>
+</section>
+
+<!-- === SOFIA 4, DOVERA, OBSAH, MERANIE === -->
+<section id="dovera-obsah">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">05</span> Štvrtá vrstva auditu</div>
+    <h2 class="section-heading">Dôvera, obsah, meranie</h2>
+    <p class="section-subheading">
+      Prečo človek nakoniec klikne „Pridať do košíka", a či dáta, ktoré posielame do nástrojov, sú skutočne tie, podľa ktorých sa dá rozhodovať.
+    </p>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">O nás a firemná dôveryhodnosť</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> kontakty sú viditeľné, About me obsahuje media/TV odkazy, v podmienkach je subjekt <em>Kremnická Almara o.z.</em>, ale príbeh značky nie je spracovaný presvedčivo.</p>
+        <p><strong>Prečo:</strong> pri remeselnej kúpe chce človek „spoznať autora".</p>
+        <p><strong>Odporúčanie:</strong> doplniť silnejšiu About stránku s fotkou autorky, dielňou, procesom, mapou a jasnými firemnými údajmi.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">GDPR a cookies</div><div class="score-val score-low"><span class="num">3</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> cookie banner má Accept a Settings, ale nie rovnako výrazné odmietnutie. EN stránka odkazuje na slovensky pomenovanú privacy URL.</p>
+        <p><strong>Prečo:</strong> právne aj dôverovo slabé.</p>
+        <p><strong>Odporúčanie:</strong> prepracovať consent banner na <em>Accept / Reject / Settings</em> a plne ho lokalizovať.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Copywriting</div><div class="score-val score-low"><span class="num">4</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> texty nesú emóciu a ručnú autenticitu, ale majú slabšiu angličtinu, preklepy a často opakujú tie isté trust bloky.</p>
+        <p><strong>Prečo:</strong> znižuje to prémiovosť značky.</p>
+        <p><strong>Odporúčanie:</strong> copy edit v EN/DE/SK a pripraviť šablóny pre hero, kategórie a PDP.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Content SEO</div><div class="score-val score-low"><span class="num">2</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> blog existuje, ale live stránka hlási <em>„No entries found..."</em>.</p>
+        <p><strong>Prečo:</strong> chýbajú organické vstupy pre témy ako <em>custom mailbox ideas, housewarming gifts, outdoor care, personalization tips</em>.</p>
+        <p><strong>Odporúčanie:</strong> rozbehnúť obsahové clustre a prepojiť ich na kategórie a produkty.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Analytika a meranie</div><div class="score-val score-high"><span class="num">8</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> prítomné GTM <code>GTM-KDHV766Q</code>, GA4 <code>G-ZMQQGX5W87</code>, Google Ads <code>AW-16631608438</code>, Facebook Pixel aj CAPI. V live checkout DOM viditeľné <code>begin_checkout</code> a <code>AddPaymentInfo</code>.</p>
+        <p><strong>Prečo:</strong> základ funnel trackingu funguje.</p>
+        <p><strong>Odporúčanie:</strong> overiť purchase event, remarketing audiences a mikro-konverzie ako otvorenie delivery offer, klik na kontakt a výber custom variantu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === SOFIA 5, BRANDING === -->
+<section id="branding" class="section-alt">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">06</span> Piata vrstva auditu</div>
+    <h2 class="section-heading">Vizuál a branding</h2>
+    <p class="section-subheading">
+      Samostatná vrstva pre vizuál, grafiku a branding na základe live webu a reálnych brand assetov overených k 21. aprílu 2026. <em>Odporúčanie: go 100 %, branding by mal ísť ruka v ruke s webovým redesignom.</em>
+    </p>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Celkový brand dojem</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> značka pôsobí autenticky a remeselne, ale nie úplne prémiovo. Prezentácia na webe je skôr „funkčný katalóg na Shoptete" než výrazná značka s vlastným svetom.</p>
+        <p><strong>Prečo:</strong> pri produkte s emóciou, personalizáciou a ručnou prácou vie silný brand výrazne zvýšiť dôveru aj ochotu zaplatiť vyššiu cenu.</p>
+        <p><strong>Odporúčanie:</strong> posunúť značku z „milý handmade e-shop" na „prémiová remeselná dielňa / autorský ateliér".</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Logo</div><div class="score-val score-mid"><span class="num">6</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> logo má príjemný handmade charakter, jemný krémový tvar tabule, čiernu kaligrafiu a červené srdce. Pôsobí ľudsky a osobne. Zároveň však pôsobí trochu staršie a nie úplne súčasne.</p>
+        <p><strong>Prečo:</strong> komunikuje remeslo, ale nie dostatočne prémiu ani konzistenciu s webom.</p>
+        <p><strong>Odporúčanie:</strong> ponechať základný motív „ručne maľované / láskavé / remeselné", logo zjednodušiť, vyčistiť a pripraviť modernizovanú verziu pre web, favicon, watermark a sociálne siete.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Typografia značky</div><div class="score-val score-low"><span class="num">3</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> logo používa dekoratívny script štýl, ale samotný web beží primárne na Nunito. Brand typografia sa na webe prakticky nerozvíja.</p>
+        <p><strong>Prečo:</strong> značka sa rozpadá medzi „romantické logo" a „štandardný e-shop font".</p>
+        <p><strong>Odporúčanie:</strong> zaviesť 2-písmový systém, čisté čitateľné text font + elegantnejšie serif / jemne remeselné display na headingy.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Farebná paleta</div><div class="score-val score-mid"><span class="num">6</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> čierna, biela a teplá krémová <code>#f2eacc</code>. Dobrý základ pre remeselný, jemný a prírodný feeling.</p>
+        <p><strong>Prečo:</strong> paleta je sympatická, ale málo odlišuje značku a málo pracuje s emóciou samotných produktov.</p>
+        <p><strong>Odporúčanie:</strong> zachovať krémovo-čierny základ, pridať 1, 2 kontrolované akcentové farby odvodené z produktov, napr. tlmená šalviová, tehlová/vínová alebo jemná modrozelená.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Grafický štýl ikon a bannerov</div><div class="score-val score-low"><span class="num">4</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> benefit bannery sú čiernobiele „sticker / linoryt" ilustrácie, logo je romantickejšie, produkty sú farebné a prírodné. Tieto tri svety nie sú v súlade.</p>
+        <p><strong>Prečo:</strong> značka potom nepôsobí ako jeden premyslený systém.</p>
+        <p><strong>Odporúčanie:</strong> vybrať jeden smer, jemný folklórno-remeselný alebo moderný artisan, a držať sa ho.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Produktová fotografia</div><div class="score-val score-high"><span class="num">7</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> samotné produkty sú vizuálne silné, originálne, zapamätateľné. Fotografia schránky ukazuje remeselnosť a jedinečnosť.</p>
+        <p><strong>Prečo:</strong> najväčšia vizuálna sila značky.</p>
+        <p><strong>Odporúčanie:</strong> jednotný foto systém pre top produkty, 1 čistá hero fotka, 1 lifestyle pri dome/bráne, 1 detail maľby, 1 foto mierky. Menej rušivé watermarky.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Konzistentnosť fotografií</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> fotky sú autentické, ale neunesú sa ako jedna prémiová séria, líšia sa pozadia, svetlo, kompozícia aj „polish".</p>
+        <p><strong>Prečo:</strong> pri vyššej cene zákazník očakáva aj kvalitnú prezentáciu.</p>
+        <p><strong>Odporúčanie:</strong> jednoduchý foto guideline, rovnaký pomer strán, podobná výška produktu v zábere, čistejšie pozadia, konzistentné nasvietenie.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Vizuálna hierarchia homepage</div><div class="score-val score-low"><span class="num">4</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> homepage je vizuálne preplnená navigáciou, hornými lištami, cookie vrstvou a množstvom produktov. Chýba silný hero moment.</p>
+        <p><strong>Prečo:</strong> značka sa používateľovi neukáže ako príbeh, ale ako dlhý katalóg.</p>
+        <p><strong>Odporúčanie:</strong> nad fold veľká hero fotka najkrajšieho produktu, krátky headline, 1 CTA, 3 trust body. Produkty až pod to.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Brand storytelling</div><div class="score-val score-mid"><span class="num">5</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> príbeh Andrey a ručnej práce na webe je, ale je schovaný a vizuálne nie je spracovaný ako „tvár značky".</p>
+        <p><strong>Prečo:</strong> pri autorskej značke ľudia nekupujú len produkt, ale aj autora a príbeh.</p>
+        <p><strong>Odporúčanie:</strong> výrazný blok s portrétom autorky, dielňou, procesom tvorby a hláškou <em>„Painted by Andrea in Slovakia since 2016"</em>.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Prémiovosť značky</div><div class="score-val score-low"><span class="num">4</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> produkty vedia niesť prémiový handmade positioning, ale web ich vizuálne sťahuje nižšie.</p>
+        <p><strong>Prečo:</strong> návštevník cíti originalitu, ale nie vždy cíti hodnotu značky na úrovni ceny.</p>
+        <p><strong>Odporúčanie:</strong> menej katalógového chaosu, viac editorial prezentácie, väčšie fotky, viac whitespace, menej boxov.</p>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-head"><div class="score-title">Dôveryhodnosť cez vizuál</div><div class="score-val score-low"><span class="num">4</span><span class="max">/10</span></div></div>
+      <div class="score-body">
+        <p><strong>Nález:</strong> chýbajú silné vizuálne trust prvky, domy zákazníkov, balenie, proces schválenia, recenzie s fotkami, mediálne logá priamo na homepage.</p>
+        <p><strong>Prečo:</strong> handmade produkt kupuje človek očami a dôverou.</p>
+        <p><strong>Odporúčanie:</strong> doplniť sekcie <em>„Ako vzniká vaša schránka", „Reálne realizácie u zákazníkov", „Média a zmienky", „Pred odoslaním posielam foto na schválenie"</em>.</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 40px;">
+      <div class="callout-title">Brandingový záver</div>
+      <p>Značka má veľmi dobré jadro, je osobná, odlišná, remeselná a zapamätateľná. Najsilnejší asset nie je aktuálny web, ale samotný produkt a autenticita autorky. Hlavný problém nie je v tom, že značka nemá identitu, ale v tom, že ju web nedokáže dostatočne prémiovo a konzistentne preložiť do digitálnej podoby.</p>
+    </div>
+  </div>
+</section>
+
+<!-- === CRAWL DATA === -->
+<section id="crawl">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">07</span> Dátová vrstva</div>
+    <h2 class="section-heading">Technické dáta z crawlu</h2>
+    <p class="section-subheading">
+      Spustili sme vlastný Greenflare crawl celého webu, v ktorom sme prešli 1 449 URL naprieč EN/DE/SK
+      verziami. Výsledky sú čisté HTTP + HTML dáta, bez hodnotenia.
+    </p>
+
+    <div class="grid grid-3">
+      <div class="card stat-block">
+        <div class="stat-number">1 449</div>
+        <span class="stat-label">Crawlnutých URL</span>
+        <span class="stat-sub">200 OK: 1 444 · 404: 2 · redirecty: 3</span>
+      </div>
+      <div class="card stat-block">
+        <div class="stat-number">902</div>
+        <span class="stat-label">Indexovateľných</span>
+        <span class="stat-sub">EN 302 · DE 300 · SK 300</span>
+      </div>
+      <div class="card stat-block">
+        <div class="stat-number">544</div>
+        <span class="stat-label">Noindex stránok</span>
+        <span class="stat-sub">271× :lieferangebot (post-checkout)</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 56px; margin-bottom: 16px;">On-page kvalita na indexovateľných stránkach</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Issue</th><th class="num">Počet</th><th>Komentár</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Chýbajúci canonical</td><td class="num">8</td><td>zanedbateľné</td></tr>
+          <tr><td>Chýbajúce meta description</td><td class="num">0</td><td>všetky stránky majú aspoň niečo</td></tr>
+          <tr><td>Title &lt; 20 znakov</td><td class="num">1</td><td>, </td></tr>
+          <tr><td>Title &gt; 70 znakov</td><td class="num">35</td><td>treba skrátiť</td></tr>
+          <tr><td><strong>Duplicitné / šablónové tituly</strong></td><td class="num">900+</td><td><span class="pill pill-high">Kritické</span></td></tr>
+          <tr><td><strong>Preklep v EN home title</strong></td><td class="num">1</td><td>„painted maibox", priamo v HTML</td></tr>
+          <tr><td><strong>SK home title</strong></td><td class="num">1</td><td>„malovane schranky", bez diakritiky, bez brandingu</td></tr>
+          <tr><td><strong>Meta description = placeholder</strong></td><td class="num">~800</td><td>napr. „Animals, Painted mailbox" alebo „Rybár."</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top: 56px; margin-bottom: 16px;">Príklady katastrofálnych produktových titulov (EN)</h3>
+    <pre><code>/animals-004/   →  Painted Mailbox - animals 004 - Painted mailbox
+/animals-027/   →  Painted Mailbox - animals 027 - Painted mailbox
+/american-001/  →  Painted Mailbox - american 001 - Painted mailbox
+/american/      →  type 9 - American - Painting on request. (please...</code></pre>
+    <p>Tieto tituly zrkadlia vyšší problém: <strong>produkty nemajú pomenovania</strong>, len interné poradové čísla. SEO ani UX nemá na čom stáť.</p>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">DE tituly (lepšie, ale stále slabé)</h3>
+    <pre><code>/de/bemalter-briefkasten---wiesenblumen-053/
+  →  Bemalter Briefkasten, Wiesenblumen 053 - Painted mailbox</code></pre>
+    <p>DE má keyword v titule, dobrý základ. Odporúčame skrátiť redundantný <code>- Painted mailbox</code> suffix, pridať benefit-slovo („handbemalt", „individuell") a geo signál („Made in Slovakia" / „Versand DE").</p>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">Štruktúrované dáta a AI readiness</h3>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4 style="color: var(--green);">✓ Prítomné (Microdata)</h4>
+        <ul class="muted" style="margin-top: 12px;">
+          <li>Product</li>
+          <li>Offer (price, availability, sku)</li>
+          <li>BreadcrumbList</li>
+          <li>WebSite + SearchAction</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--red);">✗ Chýba</h4>
+        <ul class="muted" style="margin-top: 12px;">
+          <li>AggregateRating / Review</li>
+          <li>Organization / Person</li>
+          <li>FAQPage na PDP</li>
+          <li>JSON-LD (iba Microdata)</li>
+          <li><code>/llms.txt</code> a <code>/llms-full.txt</code> (oba vracajú 404)</li>
+          <li>Blog obsah (endpoint vracia „No entries found...")</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === KEYWORDS === -->
+<section id="keywords" class="section-alt">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">08</span> Keyword research</div>
+    <h2 class="section-heading">Kde sú reálne peniaze, KW research naprieč EN / DE / SK</h2>
+    <p class="section-subheading">
+      Testované cez DataForSEO Google Ads keyword volumes na 298 seed keywords naprieč EN US, DE a SK.
+      Dáta sú aktuálne mesačné search volumes priamo z Google Ads API.
+    </p>
+
+    <div class="grid grid-3 mb-lg">
+      <div class="card stat-block">
+        <div class="stat-number" style="color: var(--green);">272k</div>
+        <span class="stat-label">DE, mesačné dopyty</span>
+        <span class="stat-sub">101 seed KWs · briefkasten sám 201k</span>
+      </div>
+      <div class="card stat-block">
+        <div class="stat-number" style="color: var(--accent-vivid);">243k</div>
+        <span class="stat-label">EN (US), mesačné dopyty</span>
+        <span class="stat-sub">140 seed KWs · gift/decor dominuje</span>
+      </div>
+      <div class="card stat-block">
+        <div class="stat-number" style="color: var(--text-muted);">3,5k</div>
+        <span class="stat-label">SK, mesačné dopyty</span>
+        <span class="stat-sub">57 seed KWs · mikro-trh</span>
+      </div>
+    </div>
+
+    <div class="callout callout-critical">
+      <div class="callout-title">Pozor: „painted mailbox" je úzky keyword</div>
+      <p>Priame hľadanie <em>„painted mailbox"</em> má 390 dopytov/mes, <em>„hand painted mailbox"</em> 210, <em>„custom painted mailbox"</em> 110. Celková priama značka = max ~700 dopytov/mes v US. <strong>Reálne peniaze sú v gift + decor + motive + „briefkasten"</strong> uhloch, z ktorých web aktuálne skoro neťaží.</p>
+    </div>
+
+    <h3 style="margin-top: 56px; margin-bottom: 16px;">EN (US), top 15 príležitostí</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Keyword</th><th class="num">Vol / mes</th><th class="num">CPC (€)</th><th class="center">Konkurencia</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>housewarming gift</td><td class="num">74 000</td><td class="num">1,05</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>wall mounted mailbox</td><td class="num">14 800</td><td class="num">1,68</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>house number sign</td><td class="num">12 100</td><td class="num">1,47</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>modern mailbox</td><td class="num">9 900</td><td class="num">4,66</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>post mount mailbox</td><td class="num">9 900</td><td class="num">2,07</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>gift for new home</td><td class="num">8 100</td><td class="num">1,09</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>mailbox ideas</td><td class="num">6 600</td><td class="num">0,57</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>curb appeal</td><td class="num">6 600</td><td class="num">2,36</td><td class="center"><span class="pill pill-low">LOW</span></td></tr>
+          <tr><td>address plaque</td><td class="num">5 400</td><td class="num">2,29</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>mountain mailbox</td><td class="num">5 400</td><td class="num">1,13</td><td class="center"><span class="pill pill-low">LOW</span></td></tr>
+          <tr><td>address sign</td><td class="num">4 400</td><td class="num">2,66</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>custom mailbox</td><td class="num">2 900</td><td class="num">5,18</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>flower mailbox</td><td class="num">1 900</td><td class="num">6,01</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>personalized mailbox</td><td class="num">720</td><td class="num">1,82</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td><strong>painted mailbox</strong></td><td class="num">390</td><td class="num">0,34</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">DE, top 15 príležitostí</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Keyword</th><th class="num">Vol / mes</th><th class="num">CPC (€)</th><th class="center">Konkurencia</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>briefkasten</strong></td><td class="num">201 000</td><td class="num">1,76</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>briefkasten kaufen</td><td class="num">9 900</td><td class="num">1,66</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>geschenk einzug</td><td class="num">9 900</td><td class="num">0,48</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>postkasten</td><td class="num">8 100</td><td class="num">1,71</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>hausnummer schild</td><td class="num">8 100</td><td class="num">1,07</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>einzugsgeschenk</td><td class="num">3 600</td><td class="num">0,63</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>türschild personalisiert</td><td class="num">2 900</td><td class="num">0,89</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>hauseingang gestalten</td><td class="num">2 400</td><td class="num">0,92</td><td class="center"><span class="pill pill-low">LOW</span></td></tr>
+          <tr><td>briefkasten holz</td><td class="num">1 900</td><td class="num">0,57</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>personalisierter briefkasten</td><td class="num">1 600</td><td class="num">2,12</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>amerikanischer briefkasten</td><td class="num">1 600</td><td class="num">0,41</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>briefkasten mit namen</td><td class="num">1 300</td><td class="num">2,11</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>briefkasten design</td><td class="num">1 000</td><td class="num">1,58</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>vintage briefkasten</td><td class="num">1 000</td><td class="num">0,60</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+          <tr><td>landhaus briefkasten</td><td class="num">880</td><td class="num">0,69</td><td class="center"><span class="pill pill-high">HIGH</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p><strong>Silný signál v DE:</strong> <em>„amerikanischer briefkasten"</em> (1 600), v DE existuje dopyt po US-style schránkach a tento eshop má celú kategóriu <em>American Mailbox</em>. Priamy match, ktorý sa teraz neťaží.</p>
+    <p><strong>Gift angle potvrdený:</strong> <em>„geschenk einzug"</em> (9 900) + <em>„einzugsgeschenk"</em> (3 600) = 13 500 dopytov/mes v DE v gift framingu.</p>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">SK, top 9 (mikro-trh)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Keyword</th><th class="num">Vol / mes</th><th class="num">CPC (€)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>poštová schránka</td><td class="num">2 900</td><td class="num">0,47</td></tr>
+          <tr><td>schránka na poštu</td><td class="num">320</td><td class="num">0,60</td></tr>
+          <tr><td>poštová schránka vintage</td><td class="num">70</td><td class="num">0,47</td></tr>
+          <tr><td>darček do nového domu</td><td class="num">70</td><td class="num">0,39</td></tr>
+          <tr><td>poštová schránka vonkajšia</td><td class="num">50</td><td class="num">0,59</td></tr>
+          <tr><td>maľovaná poštová schránka</td><td class="num">20</td><td class="num">0,10</td></tr>
+          <tr><td>drevená poštová schránka</td><td class="num">20</td><td class="num">0,21</td></tr>
+          <tr><td>handmade darček</td><td class="num">10</td><td class="num">1,25</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <div class="callout-title">Strategický záver KW research</div>
+      <p>SK je mikro-trh, „poštová schránka" (2 900) je dominantne informational. <strong>Samostatná SK SEO kampaň sa neoplatí.</strong> SK verziu webu má zmysel držať pre lokálnych kupcov + ako autentický „Made in Slovakia" signál. Skutočná investícia má ísť do DE (pillar landing pages na briefkasten + einzugsgeschenk + amerikanischer briefkasten) a EN (pivot na housewarming gift + curb appeal + mailbox motives).</p>
+    </div>
+  </div>
+</section>
+
+<!-- === GOOGLE ADS === -->
+<section id="google-ads">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">09</span> Platené vyhľadávanie</div>
+    <h2 class="section-heading">Google Ads, audit a potenciál</h2>
+    <p class="section-subheading">
+      Z auditu Sofie: Google Ads pixel <code>AW-16631608438</code> je nasadený, checkout events posielajú
+      data (<code>begin_checkout</code>, <code>AddPaymentInfo</code>). Bez prístupu do účtu nevieme
+      posúdiť aktuálny spend a ROAS. Preto plánujeme zdola.
+    </p>
+
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">Odporúčaná štruktúra vstupnej kampane</h3>
+    <div class="grid grid-3">
+      <div class="card">
+        <h5>DE Search</h5>
+        <h4 style="margin-top: 8px;">Primárny zdroj</h4>
+        <p class="muted" style="margin-top: 12px;">Ad groups: <em>briefkasten-kaufen, briefkasten-personalisiert, einzugsgeschenk, amerikanischer-briefkasten, briefkasten-holz</em>. Kombinácia transakčných a gift framingových kľúčových slov.</p>
+      </div>
+      <div class="card">
+        <h5>EN Performance Max</h5>
+        <h4 style="margin-top: 8px;">Doplnkový kanál</h4>
+        <p class="muted" style="margin-top: 12px;">Najprv len retargeting a lookalikes, nie broad search. EN CPC je príliš vysoké pre studený vstup. Potrebný Merchant Center feed.</p>
+      </div>
+      <div class="card">
+        <h5>SK</h5>
+        <h4 style="margin-top: 8px;">Neinvestovať</h4>
+        <p class="muted" style="margin-top: 12px;">Len organika a Meta Ads. SK search volume je príliš malý na samostatný výkonnostný kanál.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">Povinné pre-flight úpravy pred spustením Ads</h3>
+    <ol style="padding-left: 8px;">
+      <li><strong>Opraviť title na homepage a produkte.</strong> Ak Google quality score dostane „painted maibox" title, platíme vyšší CPC automaticky.</li>
+      <li><strong>Merchant Center feed.</strong> Bez kvalitných produktových popisov sa Shopping nerozjazdí (Google žiada min. 80, 120 slov per produkt).</li>
+      <li><strong>Conversion tracking audit.</strong> Overiť <code>purchase</code> event cez Tag Assistant + GA4 DebugView. <code>begin_checkout</code> funguje, purchase neoverený.</li>
+      <li><strong>Remarketing publika.</strong> Minimálne: All users 30d, Add to cart no purchase 14d, Past customers 365d.</li>
+    </ol>
+
+  </div>
+</section>
+
+<!-- === META ADS === -->
+<section id="meta-ads" class="section-alt">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">10</span> Platený social</div>
+    <h2 class="section-heading">Meta Ads, kanál s prirodzeným fitom pre handmade</h2>
+    <p class="section-subheading">
+      Vizuálny handmade produkt, 2 000 FB sledovateľov, 1 000 predaných kusov s existujúcimi zákazníckymi
+      fotkami = ideálna startovacia DNA pre Instagram Reels + FB/IG retargeting. FB Pixel + CAPI sú už nasadené.
+    </p>
+
+    <h3>Prečo je Meta najlepší prvý kanál</h3>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4>Produkt sedí formátu</h4>
+        <p class="muted" style="margin-top: 8px;">Vizuálny produkt s nízkymi CPM sadzbami, na DE/EN trhu lacnejší priestor ako Google Search. Handmade a storytelling autorky → prirodzene výborný creative ratio.</p>
+      </div>
+      <div class="card">
+        <h4>Máme warm publiko</h4>
+        <p class="muted" style="margin-top: 8px;">Broad lookalike z 1 000 nákupov (emaily / fbp) = studená ale konvertujúca cieľovka. 2 000 FB fans = ready-to-retarget base.</p>
+      </div>
+      <div class="card">
+        <h4>Personalizácia je built-in hook</h4>
+        <p class="muted" style="margin-top: 8px;">CTA „Show your home number / family name / favourite motif" funguje natívne s tým, čo produkt robí.</p>
+      </div>
+      <div class="card">
+        <h4>UGC je už vyrobené</h4>
+        <p class="muted" style="margin-top: 8px;">Autorka posiela foto na schválenie pred odoslaním, zákazníci sami posielajú fotky z domu, content library existuje, len sa nevyužíva.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">Odporúčaný setup (prvých 90 dní)</h3>
+
+    <h4 style="margin-top: 24px;">Creative prvky (highest priority)</h4>
+    <ul style="margin-top: 12px;">
+      <li>10 × UGC Reels „Zákazník rozbaľuje schránku" (odmena zľavou za video)</li>
+      <li>10 × „Process" Reels od autorky (ruky maľujúce, pred/po, detail farby, sušenie)</li>
+      <li>5 × „House reveal" Reels (montáž schránky pred bránou, stabilizátor)</li>
+      <li>3 × photo carousel: <em>„Painted over 1 000 mailboxes since 2016"</em> + ukážky</li>
+    </ul>
+
+    <h4 style="margin-top: 32px;">Kampane</h4>
+    <div class="table-wrap" style="margin-top: 16px;">
+      <table>
+        <thead><tr><th>Kampaň</th><th>Cieľ a nastavenie</th></tr></thead>
+        <tbody>
+          <tr><td>Cold DE, AT, CH, DE-speaking BE/LU</td><td>homeowners 30 až 60, interests <em>home decor, gardening, housewarming, handmade</em>, optimalizácia na add_to_cart</td></tr>
+          <tr><td>Cold EN, US + UK + Canada</td><td>rovnaké interests, menší objem pre vyššie CPC</td></tr>
+          <tr><td>Retargeting (všetky trhy)</td><td>cart-no-purchase a visit-product-no-cart, Dynamic Product Ads</td></tr>
+          <tr><td>Lookalike 1 % z kupujúcich</td><td>okno 365 dní, DE a EN</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-critical" style="margin-top: 32px;">
+      <div class="callout-title">Content pipeline = blocker #1</div>
+      <p>Najväčšia blokácia je schopnosť <strong>stabilne produkovať 2, 3 Reels/týždeň</strong>. Bez toho Meta utlmí impression share po 3, 4 týždňoch. Buď junior content creator na čiastočný úväzok, alebo 2 hodiny týždenne priamej tvorby podľa pripraveného scenára.</p>
+    </div>
+  </div>
+</section>
+
+<!-- === SEO BACKLOG === -->
+<section id="seo-backlog">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">11</span> SEO priority backlog</div>
+    <h2 class="section-heading">10 akcií zoradených podľa dopadu a prácnosti</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th class="num">#</th><th>Akcia</th><th class="center">Effort</th><th>Expected impact</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">1</td><td>Prepísať home titles + meta descriptions pre EN/DE/SK (odstrániť preklep, pridať USP + kľúčové slovo)</td><td class="center">2 h</td><td>vyšší CTR z aktuálnych SERP pozícií</td></tr>
+          <tr><td class="num">2</td><td>Prepísať ~300 produkt titles + metas v EN + DE (bulk cez Shoptet CSV import, pripravíme šablónu)</td><td class="center">1 deň</td><td>vyšší CTR indexovaných stránok, čiastočné zvýšenie pozícií</td></tr>
+          <tr><td class="num">3</td><td>5 nových EN landing pages: housewarming-gift, curb-appeal-ideas, modern-mailboxes, address-plaques, unique-mailboxes</td><td class="center">3 dni</td><td>otvára veľký long-tail dopyt v gift a decor framingu</td></tr>
+          <tr><td class="num">4</td><td>Zaviesť recenzie (Trustpilot / Shoptet modul) a vyzbierať ich cez kampaň smerovanú na existujúcich zákazníkov</td><td class="center">1+2 tý</td><td>AggregateRating schema, hviezdičky v SERP, vyšší CTR</td></tr>
+          <tr><td class="num">5</td><td>DE <code>/einzugsgeschenk/</code>, <code>/amerikanischer-briefkasten/</code>, <code>/briefkasten-personalisiert/</code> ako samostatné landingy</td><td class="center">2 dni</td><td>otvára významný dopyt v DE gift a custom framingu</td></tr>
+          <tr><td class="num">6</td><td>Sprístupniť blog + publikovať 8 článkov v 4-mes rytme</td><td class="center">2 mes</td><td>long-tail trafic + AI citovateľnosť</td></tr>
+          <tr><td class="num">7</td><td>Pridať <code>/llms.txt</code>, <code>/llms-full.txt</code> + JSON-LD pre Product + Organization + Person + FAQPage</td><td class="center">0,5 dňa</td><td>AI search visibility</td></tr>
+          <tr><td class="num">8</td><td>Vyčistiť navigáciu (menší počet kurátorovaných vstupov) + interný odkazový mesh blog → PDP</td><td class="center">1 tý</td><td>+link equity na top 30 produktov</td></tr>
+          <tr><td class="num">9</td><td>Dokončiť DE + EN preklad právnych stránok, checkout labelov a cookie consentu</td><td class="center">3 dni</td><td>nižší drop-off v checkoute, stabilnejšia konverzia</td></tr>
+          <tr><td class="num">10</td><td>Outreach na interior design blogy + etsy-alternative články (10 backlinks DA &gt; 15)</td><td class="center">1 mes</td><td>rebrand DR z low-mid na mid</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- === AI SEARCH === -->
+<section id="ai-search" class="section-alt">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">12</span> AI search readiness</div>
+    <h2 class="section-heading">Google AI Overviews, ChatGPT, Perplexity, aktuálne nič</h2>
+    <p class="section-subheading">
+      Odhadom žiadny z LLM nástrojov značku aktuálne necituje. Dôvody sú tri, všetky napraviteľné.
+    </p>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <h4 style="color: var(--red);">1. Obsah chýba</h4>
+        <p class="muted" style="margin-top: 12px;">Blog je prázdny („No entries found..."), produktové popisy sú 1, 3 slová. LLM nemá odkiaľ citovať.</p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--red);">2. Schema je minimalistická</h4>
+        <p class="muted" style="margin-top: 12px;">Chýba <code>Organization</code>, <code>Person</code> (autorka), <code>AggregateRating</code>. LLM nevidí entity context značky.</p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--red);">3. Žiadny llms.txt</h4>
+        <p class="muted" style="margin-top: 12px;"><code>/llms.txt</code> aj <code>/llms-full.txt</code> vracajú 404. Klienti s týmito súbormi získavajú vyššiu citabilitu.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">Plán AI-search readiness (fixed v 3, 4 týždňoch)</h3>
+    <ol style="padding-left: 8px;">
+      <li>Publikovať <code>/llms.txt</code> s ~15 riadkami navigácie (názov značky, čo predáva, 5 top URL, kontakt).</li>
+      <li>Publikovať <code>/llms-full.txt</code> ako ~3, 5k slov čistý text o značke: príbeh autorky, proces, materiál, typy schránok, personalizácia, doručenie.</li>
+      <li>Pridať JSON-LD bloky: <code>Organization</code>, <code>Person</code> (Andrea, zakladateľka), rozšírený <code>Product</code> s review a rating, <code>FAQPage</code> na PDP.</li>
+      <li>Publikovať 3 „pillar" články, ktoré LLM rád cituje:
+        <ul style="margin-top: 8px;">
+          <li><em>„How hand-painted mailboxes are made, a workshop walkthrough"</em> (EN + DE)</li>
+          <li><em>„Choosing a mailbox: American vs European vs rustic styles"</em></li>
+          <li><em>„Gift guide: 15 handmade housewarming presents from European artisans"</em></li>
+        </ul>
+      </li>
+    </ol>
+
+    <div class="callout callout-good" style="margin-top: 32px;">
+      <div class="callout-title">Meranie</div>
+      <p>Bing Webmaster Tools má najtransparentnejšie AI citation dáta (Copilot citations endpoint). Automatizáciu používame 60 dní po publikácii. Pre ChatGPT + Perplexity robíme monthly ručný check, 10 core dotazov, screenshot archív.</p>
+    </div>
+  </div>
+</section>
+
+<!-- === EMAIL === -->
+<section id="email">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">13</span> Email marketing</div>
+    <h2 class="section-heading">Najhlbšie podcenený kanál tohto webu</h2>
+    <p class="section-subheading">
+      ~1 000 predaných kusov = existujúci zoznam s LTV potenciálom.
+      Handmade a gift segment má prirodzene vyššiu LTV než jednorazový spotrebný tovar, keďže ten istý zákazník typicky nakupuje opakovane pre ďalších obdarovaných.
+      Aktuálne nula nasadených automatizácií.
+    </p>
+
+    <h3>Oportunita per automatizácia</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Automatizácia</th><th>Trigger</th><th>Cieľ</th></tr></thead>
+        <tbody>
+          <tr><td>Welcome flow (3 maily)</td><td>newsletter signup</td><td>edukácia a mäkký diskontný kód</td></tr>
+          <tr><td>Abandoned cart (2 maily)</td><td>add_to_cart bez purchase do 24 h</td><td>recovery stratených košíkov</td></tr>
+          <tr><td>Post-purchase (4 maily)</td><td>order confirmed + 30/60/90 dní</td><td>foto, recenzia, cross-sell</td></tr>
+          <tr><td>Anniversary of purchase</td><td>365 dní po nákupe</td><td>gift-for-someone-else angle</td></tr>
+          <tr><td>Re-engagement</td><td>180 dní inactive</td><td>win back</td></tr>
+          <tr><td>Seasonal (4× rok)</td><td>Vianoce, deň matiek, apríl až jún, Advent</td><td>promo a gift story</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">Platforma</h3>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4>Brevo <span style="color: var(--green); font-size: 0.8em;">✓ odporúčané</span></h4>
+        <p class="muted" style="margin-top: 12px;">Cenovo dostupné, Shoptet integrácia, solídny email designer. Pre tento objem kontaktov je ideálne prvých 6 mesiacov.</p>
+      </div>
+      <div class="card">
+        <h4>Klaviyo</h4>
+        <p class="muted" style="margin-top: 12px;">Drahšia platforma, no výrazne lepšia analytika, prediktívny LTV a benchmarking. Pre handmade eshop s vyšším AOV sa oplatí od niekoľkých tisíc kontaktov vyššie. Re-evaluácia po 6 mesiacoch.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 48px; margin-bottom: 16px;">Rýchle získavanie mailov</h3>
+    <ul>
+      <li><strong>Exit intent popup:</strong> <em>„Join: 5 % off your first painted mailbox + gift guide PDF"</em>. Zvyčajne funguje ako rýchly zdroj prvých kvalitných e-mailov.</li>
+      <li><strong>Landing page</strong> <em>„Free guide, 10 mailbox motifs for your home"</em> s double-opt-in. Na jej plnenie sa dobre hodí malá Meta Ads lead kampaň.</li>
+    </ul>
+
+  </div>
+</section>
+
+<!-- === ROADMAP === -->
+<section id="roadmap">
+  <div class="container">
+    <div class="section-eyebrow"><span class="section-eyebrow-num">14</span> Plán</div>
+    <h2 class="section-heading">90-dňový roadmap</h2>
+    <p class="section-subheading">Prioritizácia podľa effort × impact. Quick wins ťaháme dopredu, aby sa prvé výsledky objavili do 30 dní.</p>
+
+    <div class="roadmap">
+      <div class="roadmap-phase">
+        <h4>Týždeň 1, 2 · Quick wins (nulový content effort)</h4>
+        <ul>
+          <li>Opraviť homepage title (EN + DE + SK), s diakritikou, bez preklepu</li>
+          <li>Pridať <code>/llms.txt</code> + <code>/llms-full.txt</code></li>
+          <li>Vyčistiť EN zmienky v DE home + privacy + checkout</li>
+          <li>Prepnúť cookie banner na <em>Accept / Reject / Settings</em> rovnomerne</li>
+          <li>Nasadiť exit-intent email popup</li>
+        </ul>
+      </div>
+
+      <div class="roadmap-phase">
+        <h4>Týždeň 3, 4 · Príprava obsahu</h4>
+        <ul>
+          <li>Bulk prepis produkt titles + metas (Shoptet CSV), EN + DE, ~300 položiek</li>
+          <li>Content plán 10 článkov (6 EN + 4 DE), 3 v drafte</li>
+          <li>Nový PDP template (benefit block + materiál + personalizácia + FAQ), nasadený na top 20 produktov</li>
+        </ul>
+      </div>
+
+      <div class="roadmap-phase">
+        <h4>Týždeň 5, 8 · Spúšťanie kanálov</h4>
+        <ul>
+          <li>DE Google Ads Search kampaň, úvodné ad groups podľa KW research</li>
+          <li>Meta Ads: 3 kampane, cold DE, cold EN, retargeting</li>
+          <li>4 nové EN landing pages (housewarming-gift, modern-mailbox, curb-appeal-ideas, address-plaque)</li>
+          <li>Brevo + welcome + abandoned cart + post-purchase automatizácie</li>
+        </ul>
+      </div>
+
+      <div class="roadmap-phase">
+        <h4>Týždeň 9, 12 · Škálovanie</h4>
+        <ul>
+          <li>Brand upgrade, nové logo, typo guideline, nasadené na web + sociálne siete</li>
+          <li>3 nové DE landing pages (einzugsgeschenk, amerikanischer-briefkasten, briefkasten-personalisiert)</li>
+          <li>Backlink outreach kampaň (10 target sites)</li>
+          <li>Review kampaň na 500 starých zákazníkov</li>
+          <li>Prvý quarterly performance review + re-baseline</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === WHAT NEXT / CTA === -->
+<section id="next-steps" style="padding-bottom: 48px;">
+  <div class="container">
+    <div class="cta-box">
+      <div class="section-eyebrow" style="justify-content: center;"><span class="section-eyebrow-num">15</span> Čo urobiť najprv</div>
+      <h2>3 kroky, ktoré posúvajú ihlu do 30 dní</h2>
+      <p>
+        Nie celý plán naraz, iba tri veci, ktoré odomknú zvyšok. Prvá je rozhovor, druhá je bezplatná, tretia je malý test pred veľkou investíciou.
+      </p>
+
+      <div style="text-align: left; max-width: 720px; margin: 0 auto 40px;">
+        <ol style="padding-left: 8px;">
+          <li style="margin-bottom: 16px;"><strong>Dohodnúť s autorkou kapacitný strop.</strong> Koľko schránok reálne zvládne mesačne pri 0 % rezerve vs. 30 % rezerve pre custom orders? Bez tohto čísla nie je možné nastaviť spend ceiling.</li>
+          <li style="margin-bottom: 16px;"><strong>Spustiť týždeň-1 fixy</strong> (title, llms.txt, cookie, exit popup). Nulová cena, okamžitý CVR benefit.</li>
+          <li><strong>Spustiť malú Meta Ads test kampaň v DE ešte pred brand upgradom</strong>, stačia existujúce produktové fotky a 2 process Reels od autorky. Z tejto jedinej kampane získame 4-týždňové dáta o CPC a CVR, ktoré povedia, či má zmysel investovať do brand upgrade a plnej content produkcie.</li>
+        </ol>
+      </div>
+
+      <a href="mailto:hello@noktostudio.com" class="btn">Dohodnime si 30-min hovor</a>
+      <div class="muted" style="margin-top: 16px;">Alebo odpíšte na tento dokument, podľa dohodnutého kapacitného stropu vieme dodať aj rozsah brand direction, scripty pre prvé Reels alebo presný CSV pre Shoptet import produkt titles.</div>
+    </div>
+  </div>
+</section>
+
+<!-- === FOOTER === -->
+<footer>
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 32px; margin-bottom: 32px;">
+      <div>
+        <h5 style="color: var(--accent-vivid); margin-bottom: 8px;">Nokto Studio</h5>
+        <p style="color: var(--text-2); font-size: 0.9rem;">Pracujeme v tieni. Vaše výsledky hovoria na svetle.</p>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); text-align: right;">
+        <strong style="color: var(--text-2);">Dátum auditu:</strong> 21. apríl 2026<br>
+        <strong style="color: var(--text-2);">Pripravili:</strong> Sofia Zvonárová (audit website) · Nokto Studio (rozšírenie o SEO/PPC/Meta/AI/Email)<br>
+        <strong style="color: var(--text-2);">Dátové zdroje:</strong> Live DOM, Greenflare crawl, DataForSEO Google Ads API
+      </div>
+    </div>
+    <p style="text-align: center; padding-top: 32px; border-top: 1px solid var(--border); font-size: 0.8rem;">
+      © 2026 Nokto Studio. Dokument pripravený exkluzívne pre painted-mailbox.com. Nepublikovať bez súhlasu.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
